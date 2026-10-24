@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>W-ARD Radio Station - Live 24/7</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at top center, #1e1b4b 0%, #0f172a 60%, #020617 100%);
+      min-height: 100vh;
+    }
+
+    /* Custom Scrollbar for Playlist */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.5);
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(129, 140, 248, 0.8);
+    }
+
+    /* Glassmorphism Card Effect */
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 30px rgba(99, 102, 241, 0.15);
+    }
+
+    /* Glowing Effects */
+    .glow-btn {
+      box-shadow: 0 0 25px rgba(99, 102, 241, 0.6);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glow-btn:hover {
+      box-shadow: 0 0 35px rgba(129, 140, 248, 0.8);
+      transform: scale(1.05);
+    }
+    .glow-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Pulse Live Badge */
+    @keyframes livePulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .live-dot {
+      animation: livePulse 1.8s infinite ease-in-out;
+    }
+
+    /* Custom Volume Range Input */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      height: 6px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 16px;
+      width: 16px;
+      border-radius: 50%;
+      background: #818cf8;
+      cursor: pointer;
+      box-shadow: 0 0 10px #6366f1;
+    }
+  </style>
+</head>
+<body class="text-slate-100 flex items-center justify-center p-4 sm:p-6 md:p-10">
+
+  <!-- Main Container -->
+  <div class="w-full max-w-xl my-auto">
+    
+    <!-- Player Main Card -->
+    <div class="glass-card rounded-3xl p-6 sm:p-8 flex flex-col items-center text-center relative overflow-hidden">
+      
+      <!-- Top Decorative Accent -->
+      <div class="absolute -top-24 -left-24 w-48 h-48 bg-indigo-600/30 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-600/30 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Live Broadcast Badge -->
+      <div class="inline-flex items-center gap-2 bg-indigo-950/80 border border-indigo-500/30 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wider text-indigo-300 uppercase mb-5">
+        <span class="w-2 h-2 rounded-full bg-red-500 live-dot"></span>
+        <span>Broadcasting Live 24/7</span>
+      </div>
+
+      <!-- W-ARD Family Logo Banner -->
+      <div class="relative group w-48 h-48 sm:w-56 sm:h-56 mb-5 rounded-2xl overflow-hidden border-2 border-indigo-500/30 shadow-2xl transition duration-300 transform hover:scale-[1.02]">
+        <img 
+          src="watermarked_img_17370810652637262339.jpg" 
+          alt="W-ARD Family Radio Station Logo" 
+          class="w-full h-full object-cover"
+          onerror="this.onerror=null; this.src='https://placehold.co/400x400/1e1b4b/ffffff?text=W-ARD+Radio';"
+        >
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-3">
+          <span class="text-xs font-semibold text-indigo-200"><i class="fa-solid fa-radio mr-1"></i> W-ARD Station</span>
+        </div>
+      </div>
+
+      <!-- Station Info -->
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">
+        W-ARD Radio Station
+      </h1>
+      <p id="nowPlayingText" class="text-sm font-medium text-indigo-300/80 mt-1 mb-6 truncate max-w-xs sm:max-w-md">
+        <i class="fa-solid fa-compact-disc fa-spin text-indigo-400 mr-2"></i>24/7 Always On Radio Stream
+      </p>
+
+      <!-- Audio Visualizer Canvas -->
+      <div class="w-full h-16 bg-slate-900/60 rounded-xl border border-white/5 mb-6 p-1 relative overflow-hidden flex items-center justify-center">
+        <canvas id="visualizerCanvas" class="w-full h-full block"></canvas>
+        <div id="visFallback" class="absolute inset-0 flex items-center justify-center gap-1.5 opacity-60">
+          <div class="w-1 bg-indigo-500 rounded-full animate-bounce h-6" style="animation-delay: 0.1s"></div>
+          <div class="w-1 bg-indigo-400 rounded-full animate-bounce h-10" style="animation-delay: 0.3s"></div>
+          <div class="w-1 bg-purple-500 rounded-full animate-bounce h-8" style="animation-delay: 0.2s"></div>
+          <div class="w-1 bg-indigo-300 rounded-full animate-bounce h-12" style="animation-delay: 0.4s"></div>
+          <div class="w-1 bg-indigo-500 rounded-full animate-bounce h-5" style="animation-delay: 0.15s"></div>
+        </div>
+      </div>
+
+      <!-- Playback Controls -->
+      <div class="flex items-center justify-center gap-6 mb-6">
+        <!-- Main Play/Pause Button -->
+        <button 
+          id="playPauseBtn" 
+          onclick="togglePlay()" 
+          class="w-20 h-20 bg-gradient-to-tr from-indigo-600 to-purple-600 text-white rounded-full flex items-center justify-center text-2xl glow-btn focus:outline-none"
+          title="Play Stream"
+        >
+          <i id="playIcon" class="fa-solid fa-play ml-1"></i>
+        </button>
+      </div>
+
+      <!-- Volume Control Bar -->
+      <div class="w-full max-w-xs flex items-center gap-3 bg-slate-900/50 px-4 py-2.5 rounded-full border border-white/5 mb-6">
+        <button onclick="toggleMute()" class="text-slate-400 hover:text-indigo-400 transition" id="muteBtn">
+          <i class="fa-solid fa-volume-high" id="volumeIcon"></i>
+        </button>
+        <input 
+          type="range" 
+          id="volumeSlider" 
+          min="0" 
+          max="1" 
+          step="0.01" 
+          value="0.8" 
+          oninput="setVolume(this.value)"
+          class="w-full"
+        >
+        <span id="volumePercent" class="text-xs font-mono text-slate-400 w-8 text-right">80%</span>
+      </div>
+
+      <!-- Station Footer Bar -->
+      <div class="w-full pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
+        <span class="flex items-center gap-1.5">
+          <i class="fa-solid fa-tower-cell text-indigo-400"></i> FastCast4u Server
+        </span>
+        <button onclick="copyStreamUrl()" class="hover:text-indigo-300 transition flex items-center gap-1">
+          <i class="fa-solid fa-share-nodes"></i> Share Stream
+        </button>
+      </div>
+
+      <!-- Main Audio Element -->
+      <audio id="radioAudio" crossorigin="anonymous" preload="none">
+        <source src="https://eu4.fastcast4u.com/proxy/terrawingztwitch?mp=/stream" type="audio/mpeg">
+        Your browser does not support the audio element.
+      </audio>
+
+    </div>
+
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-indigo-600 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none flex items-center gap-2">
+    <i class="fa-solid fa-circle-check"></i> <span id="toastMsg">Stream URL copied to clipboard!</span>
+  </div>
+
+  <!-- JavaScript logic -->
+  <script>
+    const audio = document.getElementById('radioAudio');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const playIcon = document.getElementById('playIcon');
+    const nowPlayingText = document.getElementById('nowPlayingText');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const volumePercent = document.getElementById('volumePercent');
+    const volumeIcon = document.getElementById('volumeIcon');
+    const canvas = document.getElementById('visualizerCanvas');
+    const ctx = canvas.getContext('2d');
+    const visFallback = document.getElementById('visFallback');
+
+    let audioCtx, analyser, source, dataArray;
+    let isVisualizerSetup = false;
+    let animationFrameId;
+
+    // Set initial volume
+    audio.volume = 0.8;
+
+    // Toggle Play/Pause
+    function togglePlay() {
+      if (audio.paused) {
+        // Try starting playback
+        audio.play().then(() => {
+          updatePlayState(true);
+          setupVisualizer();
+        }).catch(err => {
+          console.warn('Playback error:', err);
+          showToast('Connecting to stream...');
+          // Reload source if buffer stalled
+          audio.load();
+          audio.play().then(() => {
+            updatePlayState(true);
+            setupVisualizer();
+          }).catch(() => {
+            showToast('Stream connecting or offline.');
+          });
+        });
+      } else {
+        audio.pause();
+        updatePlayState(false);
+      }
+    }
+
+    function updatePlayState(isPlaying) {
+      if (isPlaying) {
+        playIcon.className = 'fa-solid fa-pause';
+        playPauseBtn.classList.add('from-purple-600', 'to-pink-600');
+        visFallback.classList.remove('hidden');
+      } else {
+        playIcon.className = 'fa-solid fa-play ml-1';
+        playPauseBtn.classList.remove('from-purple-600', 'to-pink-600');
+      }
+    }
+
+    // Volume Adjustments
+    function setVolume(val) {
+      audio.volume = val;
+      volumePercent.innerText = Math.round(val * 100) + '%';
+      
+      if (val == 0) {
+        volumeIcon.className = 'fa-solid fa-volume-xmark text-red-400';
+      } else if (val < 0.5) {
+        volumeIcon.className = 'fa-solid fa-volume-low';
+      } else {
+        volumeIcon.className = 'fa-solid fa-volume-high';
+      }
+    }
+
+    let lastVolume = 0.8;
+    function toggleMute() {
+      if (audio.volume > 0) {
+        lastVolume = audio.volume;
+        volumeSlider.value = 0;
+        setVolume(0);
+      } else {
+        volumeSlider.value = lastVolume;
+        setVolume(lastVolume);
+      }
+    }
+
+    // Audio Canvas Visualizer Setup
+    function setupVisualizer() {
+      if (isVisualizerSetup) return;
+
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+        analyser = audioCtx.createAnalyser();
+        
+        source = audioCtx.createMediaElementSource(audio);
+        source.connect(analyser);
+        analyser.connect(audioCtx.destination);
+
+        analyser.fftSize = 64;
+        const bufferLength = analyser.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
+
+        isVisualizerSetup = true;
+        visFallback.classList.add('hidden'); // Hide fallback CSS animation
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        drawVisualizer();
+      } catch (e) {
+        console.log('Web Audio API visualizer fallback active due to CORS or browser policy.');
+      }
+    }
+
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+    }
+
+    function drawVisualizer() {
+      animationFrameId = requestAnimationFrame(drawVisualizer);
+
+      if (!analyser) return;
+
+      analyser.getByteFrequencyData(dataArray);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / dataArray.length) * 2;
+      let barHeight;
+      let x = 0;
+
+      for (let i = 0; i < dataArray.length; i++) {
+        barHeight = (dataArray[i] / 255) * canvas.height;
+
+        // Dynamic Gradient for bars
+        const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
+        gradient.addColorStop(0, '#6366f1');
+        gradient.addColorStop(1, '#a855f7');
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, canvas.height - barHeight, barWidth - 3, barHeight);
+
+        x += barWidth;
+      }
+    }
+
+    // Copy stream link to clipboard
+    function copyStreamUrl() {
+      const streamUrl = "https://eu4.fastcast4u.com/proxy/terrawingztwitch?mp=/stream";
+      
+      const tempInput = document.createElement("input");
+      tempInput.value = streamUrl;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+
+      showToast("Stream URL copied to clipboard!");
+    }
+
+    // Helper Toast Notification
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      toastMsg.innerText = message;
+      toast.classList.remove('opacity-0');
+      
+      setTimeout(() => {
+        toast.classList.add('opacity-0');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
